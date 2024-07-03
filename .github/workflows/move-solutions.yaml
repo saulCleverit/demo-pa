@@ -1,0 +1,93 @@
+name: Export and Import solutions
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Change this value
+      solution_name:
+        description: "name of the solution to worked on from Power Platform"
+        required: true
+        #Do Not change these values
+      solution_exported_folder:
+        description: "folder name for staging the exported solution *do not change*"
+        required: true
+        default: out/exported/
+      solution_folder:
+        description: "staging the unpacked solution folder before check-in *do not change*"
+        required: true
+        default: out/solutions/
+      solution_target_folder:
+        description: "folder name to be created and checked in *do not change*"
+        required: true
+        default: solutions/
+env:
+  #edit your values here
+  ENVIRONMENT_URL: ${{ secrets.SOURCE_ENVIRONMENT_URL }}
+  CLIENT_ID: ${{ secrets.POWERPLATFORM_CLIENT_ID }}
+  TENANT_ID: ${{ secrets.POWERPLATFORM_TENANT_ID }}
+  SECRET_ID: ${{ secrets.POWERPLATFORM_SECRET_ID }}
+permissions:
+  contents: write
+jobs:
+  export-from-powerapps:
+    runs-on: windows-latest
+    env:
+      RUNNER_DEBUG: 1
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: who-am-i action
+        uses: microsoft/powerplatform-actions/who-am-i@v0
+        with:
+          environment-url: ${{env.ENVIRONMENT_URL}}
+          app-id: ${{env.CLIENT_ID}}
+          client-secret: ${{env.SECRET_ID}}
+          tenant-id: ${{env.TENANT_ID}}
+
+      - name: export-solution action
+        uses: microsoft/powerplatform-actions/export-solution@v0
+        with:
+          environment-url: ${{env.ENVIRONMENT_URL}}
+          app-id: ${{env.CLIENT_ID}}
+          client-secret: ${{env.SECRET_ID}}
+          tenant-id: ${{env.TENANT_ID}}
+          solution-name: ${{ github.event.inputs.solution_name }}
+          solution-output-file: ./${{ github.event.inputs.solution_name }}.zip
+
+      - name: Upload Exported Solution
+        uses: actions/upload-artifact@v2
+        with:
+          name: exported-solution
+          path: ./${{ github.event.inputs.solution_name }}.zip
+
+  import-powerapps:
+    runs-on: ubuntu-latest
+    needs: export-from-powerapps
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Download Exported Solution
+        uses: actions/download-artifact@v2
+        with:
+          name: exported-solution
+          path: ./${{ github.event.inputs.solution_name }}.zip
+
+      - name: who-am-i action
+        uses: microsoft/powerplatform-actions/who-am-i@v0
+        with:
+          environment-url: ${{env.ENVIRONMENT_URL}}
+          app-id: ${{env.CLIENT_ID}}
+          client-secret: ${{env.SECRET_ID}}
+          tenant-id: ${{env.TENANT_ID}}
+
+      - name: Import PowerApps Solution
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ secrets.TARGET_ENVIRONMENT_URL }}
+          solution-file: ./${{ github.event.inputs.solution_name }}.zip
+          run-asynchronously: true
