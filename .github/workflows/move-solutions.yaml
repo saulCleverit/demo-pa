@@ -8,7 +8,6 @@ on:
         required: true
 
 env:
-  # Edit your values here
   ENVIRONMENT_URL: ${{ secrets.SOURCE_ENVIRONMENT_URL }}
   CLIENT_ID: ${{ secrets.POWERPLATFORM_CLIENT_ID }}
   TENANT_ID: ${{ secrets.POWERPLATFORM_TENANT_ID }}
@@ -28,6 +27,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           lfs: true
+
+      - name: Install Power Platform CLI (PAC)
+        run: npm install -g pac
 
       - name: who-am-i action
         uses: microsoft/powerplatform-actions/who-am-i@v0
@@ -65,7 +67,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: exported-solution
-          path: ./${{ github.event.inputs.solution_name }}.zip
+          path: ./
+
+      - name: Install Power Platform CLI (PAC)
+        run: npm install -g pac
 
       - name: who-am-i action
         uses: microsoft/powerplatform-actions/who-am-i@v0
