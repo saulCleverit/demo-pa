@@ -104,4 +104,4 @@ jobs:
           app-id: ${{ env.CLIENT_ID }}
           client-secret: ${{ env.SECRET_ID }}
           tenant-id: ${{ env.TENANT_ID }}
-          path: ./${{ github.event.inputs.solution_name }}.zip
+          path: ./${{ github.event.inputs.solution_name }}
