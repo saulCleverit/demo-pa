@@ -89,3 +89,19 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           solution-file: ./${{ github.event.inputs.solution_name }}.zip
           run-asynchronously: true
+  check-soled-solution:
+    runs-on: ubuntu-latest
+    needs: import-powerapps
+
+    steps:
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: check-solution-status action
+        uses: microsoft/powerplatform-actions/check-solution@v1
+        with:
+          environment-url: ${{ env.TARGET_ENVIRONMENT_URL }}
+          app-id: ${{ env.CLIENT_ID }}
+          client-secret: ${{ env.SECRET_ID }}
+          tenant-id: ${{ env.TENANT_ID }}
+          path: ./${{ github.event.inputs.solution_name }}.zip
