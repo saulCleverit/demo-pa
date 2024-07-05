@@ -89,7 +89,7 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           solution-file: ./${{ github.event.inputs.solution_name }}.zip
           run-asynchronously: true
-  check-soled-solution:
+  check-solution:
     runs-on: ubuntu-latest
     needs: import-powerapps
 
