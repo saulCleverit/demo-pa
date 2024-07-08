@@ -93,22 +93,33 @@ jobs:
   check-solution-status:
     runs-on: windows-latest
     needs: import-powerapps
+
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Download Exported Solution
+        uses: actions/download-artifact@v2
+        with:
+          name: exported-solution
+          path: ./
+
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
 
-      - name: Authenticate Power Platform CLI
-        run: |
-          pac auth create --kind SERVICEPRINCIPAL --url ${{ env.TARGET_ENVIRONMENT_URL }} --applicationId ${{ env.CLIENT_ID }} --clientSecret ${{ env.SECRET_ID }} --tenant ${{ env.TENANT_ID }}
+      - name: who-am-i action
+        uses: microsoft/powerplatform-actions/who-am-i@v1
+        with:
+          environment-url: ${{ env.TARGET_ENVIRONMENT_URL }}
+          app-id: ${{ env.CLIENT_ID }}
+          client-secret: ${{ env.SECRET_ID }}
+          tenant-id: ${{ env.TENANT_ID }}
 
-      - name: Retrieve Solution Status
-        run: |
-          $solutionName = "${{ github.event.inputs.solution_name }}"
-          $solutions = pac solution list | ConvertFrom-Json
-          $solution = $solutions | Where-Object { $_.uniquename -eq $solutionName }
-          if ($solution) {
-            Write-Output "Solution status: $($solution.status)"
-          } else {
-            Write-Output "Solution not found"
-          }
-        shell: pwsh
+      - name: Check Solution
+        uses: microsoft/powerplatform-actions/check-solution@v1
+        with:
+          environment-url: ${{ env.TARGET_ENVIRONMENT_URL }}
+          app-id: ${{ env.CLIENT_ID }}
+          client-secret: ${{ env.SECRET_ID }}
+          tenant-id: ${{ env.TENANT_ID }}
+          path: ./${{ github.event.inputs.solution_name }}.zip
