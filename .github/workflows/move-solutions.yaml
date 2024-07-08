@@ -94,6 +94,9 @@ jobs:
     runs-on: windows-latest
     needs: import-powerapps
     steps:
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
       - name: Authenticate Power Platform CLI
         run: |
           pac auth create --kind SERVICEPRINCIPAL --url ${{ env.TARGET_ENVIRONMENT_URL }} --applicationId ${{ env.CLIENT_ID }} --clientSecret ${{ env.SECRET_ID }} --tenant ${{ env.TENANT_ID }}
