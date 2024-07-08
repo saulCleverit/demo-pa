@@ -89,19 +89,22 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           solution-file: ./${{ github.event.inputs.solution_name }}.zip
           run-asynchronously: true
-  check-solution:
-    runs-on: ubuntu-latest
-    needs: import-powerapps
 
+  check-solution-status:
+    runs-on: windows-latest
     steps:
-      - name: Install Power Platform Tools
-        uses: microsoft/powerplatform-actions/actions-install@v1
+      - name: Authenticate Power Platform CLI
+        run: |
+          pac auth create --kind SERVICEPRINCIPAL --url ${{ env.TARGET_ENVIRONMENT_URL }} --applicationId ${{ env.CLIENT_ID }} --clientSecret ${{ env.SECRET_ID }} --tenant ${{ env.TENANT_ID }}
 
-      - name: check-solution-status action
-        uses: microsoft/powerplatform-actions/check-solution@v1
-        with:
-          environment-url: ${{ env.TARGET_ENVIRONMENT_URL }}
-          app-id: ${{ env.CLIENT_ID }}
-          client-secret: ${{ env.SECRET_ID }}
-          tenant-id: ${{ env.TENANT_ID }}
-          path: ./${{ github.event.inputs.solution_name }}
+      - name: Retrieve Solution Status
+        run: |
+          $solutionName = "${{ github.event.inputs.solution_name }}"
+          $solutions = pac solution list | ConvertFrom-Json
+          $solution = $solutions | Where-Object { $_.uniquename -eq $solutionName }
+          if ($solution) {
+            Write-Output "Solution status: $($solution.status)"
+          } else {
+            Write-Output "Solution not found"
+          }
+        shell: pwsh
