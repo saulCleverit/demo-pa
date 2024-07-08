@@ -92,6 +92,7 @@ jobs:
 
   check-solution-status:
     runs-on: windows-latest
+    needs: import-powerapps
     steps:
       - name: Authenticate Power Platform CLI
         run: |
